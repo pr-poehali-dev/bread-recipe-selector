@@ -5,6 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import RecipeDetail from '@/components/RecipeDetail';
+import HomePage from '@/components/HomePage';
 
 interface Recipe {
   id: number;
@@ -23,7 +24,7 @@ interface Recipe {
 }
 
 const Index = () => {
-  const [activeSection, setActiveSection] = useState<'recipes' | 'tips' | 'favorites'>('recipes');
+  const [activeSection, setActiveSection] = useState<'home' | 'recipes' | 'tips' | 'favorites'>('home');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [favorites, setFavorites] = useState<number[]>([]);
 
@@ -169,6 +170,10 @@ const Index = () => {
 
   const favoriteRecipes = recipes.filter(recipe => favorites.includes(recipe.id));
 
+  if (activeSection === 'home') {
+    return <HomePage onNavigateToRecipes={() => setActiveSection('recipes')} />;
+  }
+
   if (selectedRecipe) {
     return (
       <RecipeDetail 
@@ -192,6 +197,17 @@ const Index = () => {
               <h1 className="text-3xl font-bold text-foreground">Домашняя Выпечка</h1>
             </div>
             <nav className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => setActiveSection('home')}
+                className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                  activeSection === 'home'
+                    ? 'bg-primary text-primary-foreground shadow-md'
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                }`}
+              >
+                <Icon name="Home" size={18} className="inline mr-1" />
+                Главная
+              </button>
               <button
                 onClick={() => setActiveSection('recipes')}
                 className={`px-6 py-2 rounded-lg font-medium transition-all ${
