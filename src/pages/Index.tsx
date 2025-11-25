@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -16,11 +16,32 @@ interface Recipe {
   servings: string;
   ingredients: string[];
   steps: string[];
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
 }
 
 const Index = () => {
-  const [activeSection, setActiveSection] = useState<'recipes' | 'tips'>('recipes');
+  const [activeSection, setActiveSection] = useState<'recipes' | 'tips' | 'favorites'>('recipes');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [favorites, setFavorites] = useState<number[]>([]);
+
+  useEffect(() => {
+    const savedFavorites = localStorage.getItem('favoritesRecipes');
+    if (savedFavorites) {
+      setFavorites(JSON.parse(savedFavorites));
+    }
+  }, []);
+
+  const toggleFavorite = (recipeId: number) => {
+    const newFavorites = favorites.includes(recipeId)
+      ? favorites.filter(id => id !== recipeId)
+      : [...favorites, recipeId];
+    
+    setFavorites(newFavorites);
+    localStorage.setItem('favoritesRecipes', JSON.stringify(newFavorites));
+  };
 
   const recipes: Recipe[] = [
     {
@@ -31,6 +52,10 @@ const Index = () => {
       difficulty: 'Средне',
       image: 'https://cdn.poehali.dev/projects/c076827b-3010-4779-8139-57da334bf85d/files/1ab50615-df17-422e-b8b2-413d3d28a7e5.jpg',
       servings: '1 буханка (8-10 порций)',
+      calories: 265,
+      protein: 8,
+      carbs: 49,
+      fat: 4,
       ingredients: [
         '500 г пшеничной муки высшего сорта',
         '300 мл тёплой воды',
@@ -57,6 +82,10 @@ const Index = () => {
       difficulty: 'Сложно',
       image: 'https://cdn.poehali.dev/projects/c076827b-3010-4779-8139-57da334bf85d/files/19b79b9d-966d-4dd9-a893-21ad1c88257f.jpg',
       servings: '12 круассанов',
+      calories: 406,
+      protein: 8,
+      carbs: 46,
+      fat: 21,
       ingredients: [
         '500 г пшеничной муки',
         '250 мл молока',
@@ -84,6 +113,10 @@ const Index = () => {
       difficulty: 'Средне',
       image: 'https://cdn.poehali.dev/projects/c076827b-3010-4779-8139-57da334bf85d/files/58144f3a-714e-43e2-9904-cffc213c71af.jpg',
       servings: '1 большая хала (10-12 порций)',
+      calories: 295,
+      protein: 7,
+      carbs: 48,
+      fat: 8,
       ingredients: [
         '500 г пшеничной муки',
         '250 мл тёплой воды',
@@ -134,20 +167,31 @@ const Index = () => {
     },
   ];
 
+  const favoriteRecipes = recipes.filter(recipe => favorites.includes(recipe.id));
+
   if (selectedRecipe) {
-    return <RecipeDetail recipe={selectedRecipe} onBack={() => setSelectedRecipe(null)} />;
+    return (
+      <RecipeDetail 
+        recipe={selectedRecipe} 
+        onBack={() => setSelectedRecipe(null)}
+        isFavorite={favorites.includes(selectedRecipe.id)}
+        onToggleFavorite={() => toggleFavorite(selectedRecipe.id)}
+      />
+    );
   }
+
+  const displayedRecipes = activeSection === 'favorites' ? favoriteRecipes : recipes;
 
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <Icon name="Wheat" size={32} className="text-primary" />
               <h1 className="text-3xl font-bold text-foreground">Домашняя Выпечка</h1>
             </div>
-            <nav className="flex gap-2">
+            <nav className="flex gap-2 flex-wrap">
               <button
                 onClick={() => setActiveSection('recipes')}
                 className={`px-6 py-2 rounded-lg font-medium transition-all ${
@@ -168,61 +212,124 @@ const Index = () => {
               >
                 Советы
               </button>
+              <button
+                onClick={() => setActiveSection('favorites')}
+                className={`px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                  activeSection === 'favorites'
+                    ? 'bg-primary text-primary-foreground shadow-md'
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                }`}
+              >
+                <Icon name="Heart" size={18} />
+                Избранное
+                {favorites.length > 0 && (
+                  <Badge variant="outline" className="ml-1">{favorites.length}</Badge>
+                )}
+              </button>
             </nav>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-12">
-        {activeSection === 'recipes' && (
+        {(activeSection === 'recipes' || activeSection === 'favorites') && (
           <div className="animate-fade-in">
             <div className="mb-8 text-center">
-              <h2 className="text-4xl font-bold mb-3 text-foreground">Лучшие рецепты выпечки</h2>
+              <h2 className="text-4xl font-bold mb-3 text-foreground">
+                {activeSection === 'favorites' ? 'Избранные рецепты' : 'Лучшие рецепты выпечки'}
+              </h2>
               <p className="text-lg text-muted-foreground">
-                Проверенные рецепты для создания ароматного хлеба и выпечки дома
+                {activeSection === 'favorites' 
+                  ? 'Ваши сохранённые рецепты'
+                  : 'Проверенные рецепты для создания ароматного хлеба и выпечки дома'
+                }
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10">
-              {recipes.map((recipe) => (
-                <Card
-                  key={recipe.id}
-                  className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-card border-border cursor-pointer"
-                  onClick={() => setSelectedRecipe(recipe)}
-                >
-                  <div className="aspect-[4/3] overflow-hidden">
-                    <img
-                      src={recipe.image}
-                      alt={recipe.title}
-                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
-                    />
-                  </div>
-                  <CardHeader>
-                    <CardTitle className="text-2xl">{recipe.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground mb-4 leading-relaxed">{recipe.description}</p>
-                    <Separator className="my-4" />
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Icon name="Clock" size={16} />
-                        <span>{recipe.time}</span>
-                      </div>
-                      <Badge
-                        variant={recipe.difficulty === 'Сложно' ? 'destructive' : 'secondary'}
-                        className="font-medium"
+            {activeSection === 'favorites' && favoriteRecipes.length === 0 ? (
+              <div className="text-center py-16">
+                <Icon name="Heart" size={64} className="text-muted-foreground mx-auto mb-4 opacity-30" />
+                <h3 className="text-2xl font-bold mb-2 text-foreground">Нет избранных рецептов</h3>
+                <p className="text-muted-foreground mb-6">
+                  Добавьте рецепты в избранное, чтобы быстро находить их
+                </p>
+                <Button onClick={() => setActiveSection('recipes')}>
+                  Посмотреть рецепты
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10">
+                {displayedRecipes.map((recipe) => (
+                  <Card
+                    key={recipe.id}
+                    className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-card border-border"
+                  >
+                    <div className="aspect-[4/3] overflow-hidden relative group">
+                      <img
+                        src={recipe.image}
+                        alt={recipe.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(recipe.id);
+                        }}
+                        className="absolute top-3 right-3 w-10 h-10 bg-card/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-card transition-all hover:scale-110 shadow-lg"
                       >
-                        {recipe.difficulty}
-                      </Badge>
+                        <Icon 
+                          name="Heart" 
+                          size={20} 
+                          className={favorites.includes(recipe.id) ? 'fill-red-500 text-red-500' : 'text-muted-foreground'}
+                        />
+                      </button>
                     </div>
-                    <Button className="w-full" variant="default">
-                      <Icon name="ChefHat" size={18} className="mr-2" />
-                      Смотреть рецепт
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    <CardHeader>
+                      <CardTitle className="text-2xl">{recipe.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground mb-4 leading-relaxed">{recipe.description}</p>
+                      
+                      <div className="bg-accent/20 rounded-lg p-3 mb-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Icon name="Flame" size={16} className="text-primary" />
+                          <span className="text-sm font-bold text-foreground">
+                            {recipe.calories} ккал на порцию
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+                          <div>Белки: {recipe.protein}г</div>
+                          <div>Углев: {recipe.carbs}г</div>
+                          <div>Жиры: {recipe.fat}г</div>
+                        </div>
+                      </div>
+
+                      <Separator className="my-4" />
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Icon name="Clock" size={16} />
+                          <span>{recipe.time}</span>
+                        </div>
+                        <Badge
+                          variant={recipe.difficulty === 'Сложно' ? 'destructive' : 'secondary'}
+                          className="font-medium"
+                        >
+                          {recipe.difficulty}
+                        </Badge>
+                      </div>
+                      <Button 
+                        className="w-full" 
+                        variant="default"
+                        onClick={() => setSelectedRecipe(recipe)}
+                      >
+                        <Icon name="ChefHat" size={18} className="mr-2" />
+                        Смотреть рецепт
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

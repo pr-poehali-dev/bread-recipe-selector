@@ -15,11 +15,17 @@ interface RecipeDetailProps {
     servings: string;
     ingredients: string[];
     steps: string[];
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
   };
   onBack: () => void;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
 }
 
-const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
+const RecipeDetail = ({ recipe, onBack, isFavorite, onToggleFavorite }: RecipeDetailProps) => {
   return (
     <div className="min-h-screen bg-background">
       <div className="relative h-[400px] overflow-hidden">
@@ -36,6 +42,17 @@ const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
         >
           <Icon name="ArrowLeft" size={20} className="mr-2" />
           Назад
+        </Button>
+        <Button
+          onClick={onToggleFavorite}
+          variant="secondary"
+          className="absolute top-6 right-6 shadow-lg"
+        >
+          <Icon 
+            name="Heart" 
+            size={20} 
+            className={isFavorite ? 'fill-red-500 text-red-500' : ''}
+          />
         </Button>
       </div>
 
@@ -64,6 +81,37 @@ const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
               </Badge>
             </div>
 
+            <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 mb-8">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-foreground">
+                  <Icon name="Calculator" size={24} className="text-primary" />
+                  Пищевая ценность на 1 порцию
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-card/50 backdrop-blur-sm rounded-lg p-4 text-center">
+                    <Icon name="Flame" size={24} className="text-primary mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-foreground">{recipe.calories}</div>
+                    <div className="text-sm text-muted-foreground">ккал</div>
+                  </div>
+                  <div className="bg-card/50 backdrop-blur-sm rounded-lg p-4 text-center">
+                    <Icon name="Beef" size={24} className="text-primary mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-foreground">{recipe.protein}г</div>
+                    <div className="text-sm text-muted-foreground">Белки</div>
+                  </div>
+                  <div className="bg-card/50 backdrop-blur-sm rounded-lg p-4 text-center">
+                    <Icon name="Wheat" size={24} className="text-primary mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-foreground">{recipe.carbs}г</div>
+                    <div className="text-sm text-muted-foreground">Углеводы</div>
+                  </div>
+                  <div className="bg-card/50 backdrop-blur-sm rounded-lg p-4 text-center">
+                    <Icon name="Droplet" size={24} className="text-primary mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-foreground">{recipe.fat}г</div>
+                    <div className="text-sm text-muted-foreground">Жиры</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Separator className="my-8" />
 
             <div className="grid md:grid-cols-2 gap-8 mb-8">
@@ -84,7 +132,7 @@ const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
 
               <div>
                 <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-foreground">
-                  <Icon name="Flame" size={24} className="text-primary" />
+                  <Icon name="ChefHat" size={24} className="text-primary" />
                   Приготовление
                 </h2>
                 <div className="space-y-6">
@@ -118,10 +166,18 @@ const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
         </Card>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <Button onClick={onBack} variant="outline" size="lg" className="w-full md:w-auto">
+      <div className="container mx-auto px-4 py-8 flex gap-4 flex-wrap">
+        <Button onClick={onBack} variant="outline" size="lg">
           <Icon name="ArrowLeft" size={20} className="mr-2" />
           Вернуться к рецептам
+        </Button>
+        <Button onClick={onToggleFavorite} variant="default" size="lg">
+          <Icon 
+            name="Heart" 
+            size={20} 
+            className={`mr-2 ${isFavorite ? 'fill-current' : ''}`}
+          />
+          {isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'}
         </Button>
       </div>
     </div>
